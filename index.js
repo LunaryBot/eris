@@ -7,6 +7,7 @@ function Eris(token, options) {
 }
 
 Eris.AutocompleteInteraction = require("./lib/structures/AutocompleteInteraction");
+Eris.AutomodRule = require("./lib/structures/AutomodRule");
 Eris.Base = require("./lib/structures/Base");
 Eris.Bucket = require("./lib/util/Bucket");
 Eris.CategoryChannel = require("./lib/structures/CategoryChannel");
@@ -25,6 +26,7 @@ Eris.Guild = require("./lib/structures/Guild");
 Eris.GuildChannel = require("./lib/structures/GuildChannel");
 Eris.GuildIntegration = require("./lib/structures/GuildIntegration");
 Eris.GuildPreview = require("./lib/structures/GuildPreview");
+Eris.GuildScheduledEvent = require("./lib/structures/GuildScheduledEvent");
 Eris.GuildTemplate = require("./lib/structures/GuildTemplate");
 Eris.Interaction = require("./lib/structures/Interaction");
 Eris.Invite = require("./lib/structures/Invite");

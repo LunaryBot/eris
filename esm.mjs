@@ -6,6 +6,7 @@ export default function(token, options) {
 
 export const {
   AutocompleteInteraction,
+  AutomodRule,
   Base,
   Bucket,
   CategoryChannel,
@@ -24,6 +25,7 @@ export const {
   GuildChannel,
   GuildIntegration,
   GuildPreview,
+  GuildScheduledEvent,
   GuildTemplate,
   Interaction,
   Invite,
