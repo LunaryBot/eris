@@ -20,7 +20,7 @@ declare namespace Eris {
 
   // Channel
   type AnyChannel = AnyGuildChannel | PrivateChannel;
-  type AnyGuildChannel = GuildTextableChannel | AnyVoiceChannel | CategoryChannel | StoreChannel;
+  type AnyGuildChannel = GuildTextableChannel | AnyVoiceChannel | CategoryChannel;
   type AnyThreadChannel = NewsThreadChannel | PrivateThreadChannel | PublicThreadChannel | ThreadChannel;
   type AnyVoiceChannel = VoiceChannel | StageChannel;
   type GuildTextableChannel = TextChannel | NewsChannel;
@@ -103,6 +103,7 @@ declare namespace Eris {
   type InteractionDataOptionsRole = InteractionDataOptionWithValue<Constants["ApplicationCommandOptionTypes"]["ROLE"], string>;
   type InteractionDataOptionsMentionable = InteractionDataOptionWithValue<Constants["ApplicationCommandOptionTypes"]["MENTIONABLE"], string>;
   type InteractionDataOptionsNumber = InteractionDataOptionWithValue<Constants["ApplicationCommandOptionTypes"]["NUMBER"], number>;
+  type InteractionDataOptionsAttachment = InteractionDataOptionWithValue<Constants["ApplicationCommandOptionTypes"]["ATTACHMENT"], string>
 
   interface InteractionOptions {
     type: Constants["InteractionResponseTypes"][keyof Constants["InteractionResponseTypes"]];
@@ -584,19 +585,6 @@ declare namespace Eris {
   }
 
   // Events
-  interface OldCall {
-    endedTimestamp?: number;
-    participants: string[];
-    region: string;
-    ringing: string[];
-    unavailable: boolean;
-  }
-  interface OldGroupChannel {
-    name: string;
-    ownerID: string;
-    icon: string;
-    type: Constants["ChannelTypes"]["GROUP_DM"];
-  }
   interface OldGuild {
     afkChannelID: string | null;
     afkTimeout: number;
@@ -706,23 +694,14 @@ declare namespace Eris {
     selfVideo: boolean;
   }
   interface EventListeners {
-    callCreate: [call: Call];
-    callDelete: [call: Call];
-    callRing: [call: Call];
-    callUpdate: [call: Call, oldCall: OldCall];
     channelCreate: [channel: AnyChannel];
     channelDelete: [channel: AnyChannel];
     channelPinUpdate: [channel: TextableChannel, timestamp: number, oldTimestamp: number];
-    channelRecipientAdd: [channel: GroupChannel, user: User];
-    channelRecipientRemove: [channel: GroupChannel, user: User];
-    channelUpdate: [channel: AnyGuildChannel, oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel]
-    | [channel: GroupChannel, oldChannel: OldGroupChannel];
+    channelUpdate: [channel: AnyGuildChannel, oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel];
     connect: [id: number];
     debug: [message: string, id?: number];
     disconnect: [];
     error: [err: Error, id?: number];
-    friendSuggestionCreate: [user: User, reasons: FriendSuggestionReasons];
-    friendSuggestionDelete: [user: User];
     guildAvailable: [guild: Guild];
     guildBanAdd: [guild: Guild, user: User];
     guildBanRemove: [guild: Guild, user: User];
@@ -755,9 +734,6 @@ declare namespace Eris {
     rawREST: [request: RawRESTRequest];
     rawWS: [packet: RawPacket, id: number];
     ready: [];
-    relationshipAdd: [relationship: Relationship];
-    relationshipRemove: [relationship: Relationship];
-    relationshipUpdate: [relationship: Relationship, oldRelationship: { type: number }];
     shardPreReady: [id: number];
     stageInstanceCreate: [stageInstance: StageInstance];
     stageInstanceDelete: [stageInstance: StageInstance];
@@ -1476,8 +1452,8 @@ declare namespace Eris {
     user: PartialUser;
   }
   interface Constants {
-    GATEWAY_VERSION: 9;
-    REST_VERSION: 9;
+    GATEWAY_VERSION: 10;
+    REST_VERSION: 10;
     ActivityTypes: {
       GAME:      0;
       STREAMING: 1;
@@ -1497,6 +1473,7 @@ declare namespace Eris {
       ROLE:              8;
       MENTIONABLE:       9;
       NUMBER:            10;
+      ATTACHMENT:        11;
     };
     ApplicationCommandPermissionTypes: {
       ROLE: 1;
@@ -1615,15 +1592,12 @@ declare namespace Eris {
       IDENTIFY:              2;
       PRESENCE_UPDATE:       3;
       VOICE_STATE_UPDATE:    4;
-      VOICE_SERVER_PING:     5;
       RESUME:                6;
       RECONNECT:             7;
       REQUEST_GUILD_MEMBERS: 8;
       INVALID_SESSION:       9;
       HELLO:                 10;
       HEARTBEAT_ACK:         11;
-      SYNC_GUILD:            12;
-      SYNC_CALL:             13;
     };
     GuildFeatures: [
       "ANIMATED_ICON",
@@ -1887,8 +1861,6 @@ declare namespace Eris {
       DISCORD_EMPLOYEE:             1;
       PARTNER:                      2;
       PARTNERED_SERVER_OWNER:       2;
-      /** @deprecated */
-      DISCORD_PARTNER:              2;
       HYPESQUAD:                    4;
       HYPESQUAD_EVENTS:             4;
       BUG_HUNTER_LEVEL_1:           8;
@@ -1935,8 +1907,6 @@ declare namespace Eris {
       HELLO:               8;
       RESUMED:             9;
       CLIENT_DISCONNECT:   13;
-      /** @deprecated */
-      DISCONNECT:          13;
     };
     WebhookTypes: {
       INCOMING:         1;
@@ -2063,19 +2033,6 @@ declare namespace Eris {
     constructor(message: string, event: Event);
   }
 
-  export class Call extends Base {
-    channel: GroupChannel;
-    createdAt: number;
-    endedTimestamp: number | null;
-    id: string;
-    participants: string[];
-    region: string | null;
-    ringing: string[];
-    unavailable: boolean;
-    voiceStates: Collection<VoiceState>;
-    constructor(data: BaseData, channel: GroupChannel);
-  }
-
   export class CategoryChannel extends GuildChannel {
     channels: Collection<Exclude<AnyGuildChannel, CategoryChannel>>;
     type: Constants["ChannelTypes"]["GUILD_CATEGORY"];
@@ -2095,42 +2052,34 @@ declare namespace Eris {
   export class Client extends EventEmitter {
     application?: { id: string; flags: number };
     bot: boolean;
-    channelGuildMap: { [s: string]: string };
+    channelGuildMap: Record<string, string>;
     gatewayURL?: string;
-    groupChannels: Collection<GroupChannel>;
     guilds: Collection<Guild>;
-    guildShardMap: { [s: string]: number };
+    guildShardMap: Record<string, number>;
     lastConnect: number;
     lastReconnectDelay: number;
-    notes: { [s: string]: string };
     options: ClientOptions;
     presence: ClientPresence;
-    privateChannelMap: { [s: string]: string };
+    privateChannelMap: Record<string, string>;
     privateChannels: Collection<PrivateChannel>;
     ready: boolean;
     reconnectAttempts: number;
-    relationships: Collection<Relationship>;
     requestHandler: RequestHandler;
     shards: ShardManager;
     startTime: number;
-    threadGuildMap: { [s: string]: string };
+    threadGuildMap: Record<string, string>;
     unavailableGuilds: Collection<UnavailableGuild>;
     uptime: number;
     user: ExtendedUser;
-    userGuildSettings: { [s: string]: GuildSettings };
     users: Collection<User>;
-    userSettings: UserSettings;
     voiceConnections: VoiceConnectionManager;
     constructor(token: string, options?: ClientOptions);
     acceptInvite(inviteID: string): Promise<Invite<"withoutCount">>;
-    addGroupRecipient(groupID: string, userID: string): Promise<void>;
     addGuildDiscoverySubcategory(guildID: string, categoryID: string, reason?: string): Promise<DiscoverySubcategoryResponse>;
     addGuildMemberRole(guildID: string, memberID: string, roleID: string, reason?: string): Promise<void>;
     addMessageReaction(channelID: string, messageID: string, reaction: string): Promise<void>;
     /** @deprecated */
     addMessageReaction(channelID: string, messageID: string, reaction: string, userID: string): Promise<void>;
-    addRelationship(userID: string, block?: boolean): Promise<void>;
-    addSelfPremiumSubscription(token: string, plan: string): Promise<void>;
     banGuildMember(guildID: string, userID: string, deleteMessageDays?: number, reason?: string): Promise<void>;
     bulkEditCommandPermissions(guildID: string, permissions: { id: string; permissions: ApplicationCommandPermissions[] }[]): Promise<GuildApplicationCommandPermissions[]>;
     bulkEditCommands(commands: ApplicationCommandStructure[]): Promise<ApplicationCommand[]>;
@@ -2162,12 +2111,6 @@ declare namespace Eris {
       type: Constants["ChannelTypes"]["GUILD_NEWS"],
       options?: CreateChannelOptions
     ): Promise<NewsChannel>;
-    createChannel(
-      guildID: string,
-      name: string,
-      type: Constants["ChannelTypes"]["GUILD_STORE"],
-      options?: CreateChannelOptions
-    ): Promise<StoreChannel>;
     createChannel(
       guildID: string,
       name: string,
@@ -2267,7 +2210,6 @@ declare namespace Eris {
     deleteMessages(channelID: string, messageIDs: string[], reason?: string): Promise<void>;
     deleteRole(guildID: string, roleID: string, reason?: string): Promise<void>;
     deleteStageInstance(channelID: string): Promise<void>;
-    deleteUserNote(userID: string): Promise<void>;
     deleteWebhook(webhookID: string, token?: string, reason?: string): Promise<void>;
     deleteWebhookMessage(webhookID: string, token: string, messageID: string): Promise<void>;
     disconnect(options: { reconnect?: boolean | "auto" }): void;
@@ -2276,7 +2218,7 @@ declare namespace Eris {
       channelID: string,
       options: EditChannelOptions,
       reason?: string
-    ): Promise<GroupChannel | AnyGuildChannel>;
+    ): Promise<AnyGuildChannel>;
     editChannelPermission(
       channelID: string,
       overwriteID: string,
@@ -2547,19 +2489,6 @@ declare namespace Eris {
     mfaEnabled: boolean;
     premiumType: Constants["PremiumTypes"][keyof Constants["PremiumTypes"]];
     verified: boolean;
-  }
-
-  export class GroupChannel extends PrivateChannel {
-    icon: string | null;
-    iconURL: string | null;
-    name: string;
-    ownerID: string;
-    recipients: Collection<User>;
-    type: Constants["ChannelTypes"]["GROUP_DM"];
-    addRecipient(userID: string): Promise<void>;
-    dynamicIconURL(format?: ImageFormat, size?: number): string | null;
-    edit(options: { icon?: string; name?: string; ownerID?: string }): Promise<GroupChannel>;
-    removeRecipient(userID: string): Promise<void>;
   }
 
   export class Guild extends Base {
@@ -2975,7 +2904,7 @@ declare namespace Eris {
     createdAt: CT extends "withMetadata" ? number : null;
     guild: CT extends "withMetadata"
       ? Guild // Invite with Metadata always has guild prop
-      : CH extends Extract<InviteChannel, GroupChannel> // Invite without Metadata
+      : CH extends InviteChannel // Invite without Metadata
         ? never // If the channel is GroupChannel, there is no guild
         : CH extends Exclude<InviteChannel, InvitePartialChannel> // Invite without Metadata and not GroupChanel
           ? Guild // If the invite channel is not partial
@@ -3167,9 +3096,7 @@ declare namespace Eris {
     removeMessageReaction(messageID: string, reaction: string): Promise<void>;
     /** @deprecated */
     removeMessageReaction(messageID: string, reaction: string, userID: string): Promise<void>;
-    ring(recipient: string[]): void;
     sendTyping(): Promise<void>;
-    syncCall(): void;
     unpinMessage(messageID: string): Promise<void>;
     unsendMessage(messageID: string): Promise<void>;
   }
@@ -3371,11 +3298,6 @@ declare namespace Eris {
     delete(): Promise<void>;
     edit(options: StageInstanceOptions): Promise<StageInstance>;
     update(data: BaseData): void;
-  }
-
-  export class StoreChannel extends GuildChannel {
-    type: Constants["ChannelTypes"]["GUILD_STORE"];
-    edit(options: Omit<EditChannelOptions, "icon" | "ownerID">, reason?: string): Promise<this>;
   }
 
   export class TextChannel extends GuildChannel implements GuildTextable, Invitable {
