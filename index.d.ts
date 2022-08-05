@@ -727,7 +727,41 @@ declare namespace Eris {
     image?: string;
     creatorID?: string;
   }
+
+  interface OldAutomodRule {
+    creatorID: string;
+    name: string;
+    eventType: [keyof Constants["AutomodEventTypes"]];
+    triggerType: [keyof Constants["AutomodTriggerTypes"]];
+    keywordFilter?: string[];
+    presets?: [keyof Constants["AutomodPresetTypes"]][];
+    allowList?: string[];
+    actions: AutomodAction[];
+    enabled?: boolean;
+    exemptRoles: string[];
+    exemptChannels: string[];
+  }
+
+  interface AutomodExecution {
+    guildID: string;
+    action: AutomodAction;
+    ruleID: string;
+    ruleTriggerType: [keyof Constants["AutomodTriggerTypes"]];
+    userID: string;
+    channelID?: string;
+    messageID?: string;
+    alertSystemMessageID?: string;
+    content?: string;
+    matchedKeyword?: string;
+    matchedContent?: string;
+  }
   interface EventListeners {
+    automodRuleCreate: [rule: AutomodRule];
+    automodRuleDelete: [rule: AutomodRule];
+    automodRuleEnabled: [rule: AutomodRule];
+    automodRuleDisabled: [rule: AutomodRule];
+    automodRuleUpdate: [rule: AutomodRule, old: OldAutomodRule | null];
+    automodActionExecution: [execution: AutomodExecution];
     channelCreate: [channel: AnyChannel];
     channelDelete: [channel: AnyChannel];
     channelPinUpdate: [channel: TextableChannel, timestamp: number, oldTimestamp: number];
@@ -752,6 +786,13 @@ declare namespace Eris {
     guildStickersUpdate: [guild: PossiblyUncachedGuild, stickers: Sticker[], oldStickers: Sticker[] | null];
     guildUnavailable: [guild: UnavailableGuild];
     guildUpdate: [guild: Guild, oldGuild: OldGuild];
+    guildScheduledEventActive: [event: GuildScheduledEvent];
+    guildScheduledEventCanceled: [event: GuildScheduledEvent];
+    guildScheduledEventCompleted: [event: GuildScheduledEvent];
+    guildScheduledEvent: [event: GuildScheduledEvent];
+    guildScheduledEventDelete: [event: GuildScheduledEvent];
+    guildScheduledEventCreate: [event: GuildScheduledEvent];
+    guildScheduledEventUpdate: [event: GuildScheduledEvent, old: OldGuildScheduledEvent | null];
     guildScheduledEventUserAdd: [userID: string, guildID: string, eventID: string];
     guildScheduledEventUserRemove: [userID: string, guildID: string, eventID: string];
     hello: [trace: string[], id: number];
@@ -2888,6 +2929,8 @@ declare namespace Eris {
     token: string;
     type: number;
     version: number;
+    locale: string;
+    guildLocale?: string;
     static from(data: BaseData): AnyInteraction;
   }
 
