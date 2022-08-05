@@ -233,6 +233,8 @@ declare namespace Eris {
     options?: ApplicationCommandOptions[];
     type: T;
     defaultPermission?: boolean;
+    locale: string;
+    guildLocale?: string;
   }
 
   type AnyApplicationCommand = ChatInputApplicationCommand | MessageApplicationCommand | UserApplicationCommand;
