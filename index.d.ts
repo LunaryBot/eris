@@ -3798,6 +3798,7 @@ declare namespace Eris {
     removeReaction(reaction: string, userID?: string): Promise<void>;
     removeReactionEmoji(reaction: string): Promise<void>;
     removeReactions(): Promise<void>;
+    reply(content: MessageContent, file?: FileContent | FileContent[]): Promise<Message<T>>
     unpin(): Promise<void>;
   }
 
